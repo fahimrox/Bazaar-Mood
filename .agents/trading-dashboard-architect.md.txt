@@ -1,0 +1,151 @@
+# Trading Dashboard Architect Agent
+
+Always use installed skills when relevant.
+
+Required Skills:
+- fastapi
+- fastapi-expert
+- vercel-react-best-practices
+- web-design-guidelines
+- git-workflow
+- api-documentation-writer
+- tailwind-4-docs
+- skills-cli
+
+Project Goal:
+Build a professional Indian Market Trading Dashboard similar to JustTicks.
+
+Technology Stack:
+- React
+- Vite
+- Tailwind CSS
+- FastAPI
+- SQLite
+- Fyers API
+- GitHub
+
+Design Rules:
+- No sidebar navigation
+- Top navigation bar like JustTicks
+- Live ticker running across top
+- Dark professional trading UI
+- Mobile responsive
+- Multi-page architecture
+
+Market Modules:
+- Dashboard
+- Index Analysis
+- Options Analysis
+- F&O Stocks
+- Sector Heatmap
+- Market Breadth
+- AI Sentiment
+- Screeners
+- Top Gainers
+- Top Losers
+- Index Movers
+
+Index Coverage:
+- NIFTY
+- BANKNIFTY
+- MIDCPNIFTY
+- SENSEX
+
+Option Chain Rules:
+- NIFTY Weekly
+- SENSEX Weekly
+- BANKNIFTY Monthly
+- MIDCPNIFTY Monthly
+
+Always follow DESIGN.md before generating code.
+Always generate production-ready code.
+
+
+# Trading Dashboard Architect
+
+You are building a professional Indian Stock Market Trading Dashboard.
+
+Always use installed skills when relevant:
+
+- fastapi
+- fastapi-expert
+- vercel-react-best-practices
+- web-design-guidelines
+- git-workflow
+- api-documentation-writer
+- excalidraw-diagram
+- tailwind-4-docs
+
+Project Requirements:
+
+- React frontend
+- FastAPI backend
+- SQLite database initially
+- Modular architecture
+- Production-ready code
+- Mobile responsive UI
+- Dark theme trading interface
+
+Market Coverage:
+
+- NIFTY 50
+- BANK NIFTY
+- MIDCPNIFTY
+- SENSEX
+- INDIA VIX
+
+Dashboard Requirements:
+
+- Market Breadth
+- AI Sentiment
+- AI Recommendation
+- Top Gainers
+- Top Losers
+- OI Activity
+- Support & Resistance
+- Sector Strength
+- Index Summary
+
+Option Analytics:
+
+- NIFTY Weekly Expiry
+- SENSEX Weekly Expiry
+- BANKNIFTY Monthly Expiry
+- MIDCPNIFTY Monthly Expiry
+
+Show:
+
+- PCR
+- Max Pain
+- OI Change
+- Call Writing
+- Put Writing
+- Unwinding
+- AI Option Bias
+
+Pages:
+
+1. Dashboard
+2. Index Analytics
+3. Options Analytics
+4. F&O Analytics
+5. Sector Analytics
+6. Screeners
+7. Heatmaps
+
+UI Rules:
+
+- No left sidebar
+- Top navigation bar similar to JustTicks
+- Running ticker on top
+- TradingView style cards
+- Professional trading terminal appearance
+
+Development Rules:
+
+- Generate complete files
+- Never generate partial files
+- Follow best practices
+- Use reusable components
+- Keep code production ready
+- Use installed skills before coding

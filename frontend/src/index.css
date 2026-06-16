@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #09090b;
+  --color-canvas-soft: #121214;
+  --color-canvas-soft-2: #1c1c1f;
+  --color-border-hairline: #1f1f23;
+  --color-primary: #ffffff;
+  --color-on-primary: #09090b;
+  --color-text-body: #a1a1aa;
+  --color-text-heading: #f4f4f5;
+  --color-text-muted: #71717a;
+  
+  --color-success: #10b981;
+  --color-success-soft: rgba(16, 185, 129, 0.1);
+  --color-error: #ef4444;
+  --color-error-soft: rgba(239, 68, 68, 0.1);
+  --color-warning: #f5a623;
+  --color-warning-soft: rgba(245, 166, 35, 0.1);
+  
+  --color-accent: #aa3bff;
+  --color-cyan: #00dfd8;
+  --color-cyan-deep: #007cf0;
+  --color-pink: #ff0080;
+  --color-violet: #7928ca;
+  --color-amber: #f9cb28;
+  --color-coral: #ff4d4d;
+
+  --font-sans: "Inter", "Geist", system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-text-body);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    overflow-x: hidden;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--color-text-heading);
+    letter-spacing: -0.03em;
+  }
+}
+
+/* Custom Utilities for the Market Ticker and Glows */
+@utility animate-ticker {
+  animation: ticker-scroll 35s linear infinite;
+}
+
+@utility animate-pulse-fast {
+  animation: pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
