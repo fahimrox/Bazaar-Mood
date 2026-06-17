@@ -12,6 +12,7 @@ export default function OptionsAnalytics() {
   const fetchOptionChain = async () => {
     setLoading(true)
     setError(null)
+    setOptionChain(null) // Trigger skeleton loaders during state changes
     try {
       const response = await fetch(`http://localhost:8000/option-chain?symbol=${activeTab}&expiry=${expiry}`)
       if (!response.ok) {
@@ -31,12 +32,7 @@ export default function OptionsAnalytics() {
   }, [activeTab, expiry])
 
   if (loading && !optionChain) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <div className="w-12 h-12 border-4 border-cyan/25 border-t-cyan rounded-full animate-spin"></div>
-        <p className="text-sm font-mono text-text-muted">Loading options chain details...</p>
-      </div>
-    )
+    return <OptionsPageSkeleton />
   }
 
   if (error && !optionChain) {
@@ -52,6 +48,43 @@ export default function OptionsAnalytics() {
         </button>
       </div>
     )
+  }
+
+  // Market Bias Style Helpers
+  const biasColors = {
+    Bullish: 'bg-success/10 text-success border border-success/20',
+    Bearish: 'bg-error/10 text-error border border-error/20',
+    Neutral: 'bg-warning/10 text-warning border border-warning/20',
+  }
+  const biasColorClass = optionChain ? (biasColors[optionChain.market_bias] || 'bg-canvas-soft-2 text-text-muted border border-border-hairline') : ''
+
+  // Trade Signal Style Helpers
+  const signalColors = {
+    'BUY CE': 'bg-success/15 text-success border border-success/30 font-bold',
+    'BUY PE': 'bg-error/15 text-error border border-error/30 font-bold',
+    'NO TRADE': 'bg-canvas-soft-2 text-text-muted border border-border-hairline font-semibold',
+  }
+  const signalColorClass = optionChain ? (signalColors[optionChain.trade_signal] || 'bg-canvas-soft-2 text-text-muted border border-border-hairline') : ''
+
+  // Format trade parameters safely
+  const entryVal = optionChain && optionChain.entry > 0 ? optionChain.entry.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'
+  const slVal = optionChain && optionChain.stop_loss > 0 ? optionChain.stop_loss.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'
+  const tgtVal = optionChain && optionChain.target > 0 ? optionChain.target.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'
+
+  // Calculate Risk-to-Reward Ratio dynamically
+  let rrRatio = '0.0'
+  if (optionChain) {
+    if (optionChain.trade_signal === 'BUY CE' && optionChain.entry > 0 && optionChain.stop_loss > 0 && optionChain.target > 0) {
+      const risk = optionChain.entry - optionChain.stop_loss
+      if (risk > 0) {
+        rrRatio = ((optionChain.target - optionChain.entry) / risk).toFixed(1)
+      }
+    } else if (optionChain.trade_signal === 'BUY PE' && optionChain.entry > 0 && optionChain.stop_loss > 0 && optionChain.target > 0) {
+      const risk = optionChain.stop_loss - optionChain.entry
+      if (risk > 0) {
+        rrRatio = ((optionChain.entry - optionChain.target) / risk).toFixed(1)
+      }
+    }
   }
 
   return (
@@ -113,7 +146,7 @@ export default function OptionsAnalytics() {
           {/* Top Cards: Summary Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Spot Price */}
-            <div className="bg-canvas-soft border border-border-hairline rounded-lg p-5 shadow flex justify-between items-center">
+            <div className="bg-canvas-soft border border-border-hairline rounded-lg p-5 shadow flex justify-between items-center transition-all duration-300 hover:border-border-hairline/50">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Spot Price</span>
                 <div className="text-xl font-bold font-mono text-text-heading mt-1">
@@ -124,16 +157,16 @@ export default function OptionsAnalytics() {
             </div>
 
             {/* PCR */}
-            <div className="bg-canvas-soft border border-border-hairline rounded-lg p-5 shadow flex justify-between items-center">
+            <div className="bg-canvas-soft border border-border-hairline rounded-lg p-5 shadow flex justify-between items-center transition-all duration-300 hover:border-border-hairline/50">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Put-Call Ratio (PCR)</span>
                 <div className="text-xl font-bold font-mono text-text-heading mt-1 flex items-baseline space-x-2">
                   <span>{optionChain.pcr}</span>
                   <span className={`text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded ${
-                    optionChain.pcr > 1.25 ? 'bg-success/15 text-success' :
-                    optionChain.pcr < 0.85 ? 'bg-error/15 text-error' : 'bg-canvas-soft-2 text-text-muted'
+                    optionChain.pcr > 1.1 ? 'bg-success/15 text-success' :
+                    optionChain.pcr < 0.9 ? 'bg-error/15 text-error' : 'bg-canvas-soft-2 text-text-muted'
                   }`}>
-                    {optionChain.pcr > 1.25 ? 'Oversold (Bullish)' : optionChain.pcr < 0.85 ? 'Overbought (Bearish)' : 'Neutral'}
+                    {optionChain.pcr > 1.1 ? 'Bullish' : optionChain.pcr < 0.9 ? 'Bearish' : 'Neutral'}
                   </span>
                 </div>
               </div>
@@ -141,7 +174,7 @@ export default function OptionsAnalytics() {
             </div>
 
             {/* Max Pain */}
-            <div className="bg-canvas-soft border border-border-hairline rounded-lg p-5 shadow flex justify-between items-center">
+            <div className="bg-canvas-soft border border-border-hairline rounded-lg p-5 shadow flex justify-between items-center transition-all duration-300 hover:border-border-hairline/50">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Max Pain Strike</span>
                 <div className="text-xl font-bold font-mono text-text-heading mt-1">
@@ -152,10 +185,182 @@ export default function OptionsAnalytics() {
             </div>
           </div>
 
+          {/* V2 Analytics & Recommendations Dashboard Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Card 1: Option Analytics Profile */}
+            <div className="bg-canvas-soft border border-border-hairline rounded-lg p-6 shadow-xl relative overflow-hidden transition-all duration-300 hover:border-cyan/30 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-border-hairline">
+                  <div>
+                    <h3 className="text-sm font-bold text-text-heading font-sans flex items-center">
+                      <span className="mr-2">📊</span>
+                      <span>Option Analytics Profile</span>
+                    </h3>
+                    <p className="text-[10px] text-text-muted mt-0.5">Real-time OI and volatility characteristics</p>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase ${biasColorClass}`}>
+                    {optionChain.market_bias} Bias
+                  </span>
+                </div>
+
+                {/* Conviction Bar */}
+                <div className="mt-4 pb-4 border-b border-border-hairline">
+                  <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
+                    <span className="text-text-muted uppercase tracking-wider">Market Conviction</span>
+                    <span className="font-bold text-text-heading">{optionChain.confidence_score.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full bg-canvas-soft-2 h-2 rounded overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-violet via-accent to-cyan h-full rounded transition-all duration-500" 
+                      style={{ width: `${optionChain.confidence_score}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Sub-grid of details */}
+                <div className="grid grid-cols-2 gap-x-6 gap-y-4 mt-4 text-[11px] font-mono">
+                  {/* Left Column */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-text-muted">PCR:</span>
+                      <span className="text-text-heading font-semibold">{optionChain.pcr}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-muted">Max Pain:</span>
+                      <span className="text-text-heading font-semibold">{optionChain.maxPain.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-muted">ATM Strike:</span>
+                      <span className="text-text-heading font-semibold text-cyan">{optionChain.atm_strike.toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+
+                  {/* Right Column */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-text-muted">Support (S1):</span>
+                      <span className="text-text-heading font-semibold">
+                        {optionChain.support_1.toLocaleString('en-IN')}
+                        <span className="text-[9px] text-success ml-1">({optionChain.support_confidence.toFixed(0)}%)</span>
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-muted">Resistance (R1):</span>
+                      <span className="text-text-heading font-semibold">
+                        {optionChain.resistance_1.toLocaleString('en-IN')}
+                        <span className="text-[9px] text-error ml-1">({optionChain.resistance_confidence.toFixed(0)}%)</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Writing Section */}
+                <div className="mt-4 pt-4 border-t border-border-hairline grid grid-cols-2 gap-4 text-[11px] font-mono">
+                  <div>
+                    <span className="text-[9px] text-text-muted uppercase tracking-wider block">Call Writing (Resistance)</span>
+                    <span className={`font-semibold ${optionChain.call_writing === 'Strong' ? 'text-error' : optionChain.call_writing === 'Moderate' ? 'text-warning' : 'text-text-muted'}`}>
+                      {optionChain.call_writing}
+                    </span>
+                    {optionChain.call_writing_strike > 0 && (
+                      <span className="text-[10px] text-text-heading ml-1.5 font-bold">@ {optionChain.call_writing_strike.toLocaleString('en-IN')}</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-text-muted uppercase tracking-wider block">Put Writing (Support)</span>
+                    <span className={`font-semibold ${optionChain.put_writing === 'Strong' ? 'text-success' : optionChain.put_writing === 'Moderate' ? 'text-warning' : 'text-text-muted'}`}>
+                      {optionChain.put_writing}
+                    </span>
+                    {optionChain.put_writing_strike > 0 && (
+                      <span className="text-[10px] text-text-heading ml-1.5 font-bold">@ {optionChain.put_writing_strike.toLocaleString('en-IN')}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: AI Trade Recommendation */}
+            <div className="bg-canvas-soft border border-border-hairline rounded-lg p-6 shadow-xl relative overflow-hidden transition-all duration-300 hover:border-accent/30 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-border-hairline">
+                  <div>
+                    <h3 className="text-sm font-bold text-text-heading font-sans flex items-center">
+                      <span className="mr-2">⚡</span>
+                      <span>AI Trade Recommendation</span>
+                    </h3>
+                    <p className="text-[10px] text-text-muted mt-0.5">Automated signal & risk positioning</p>
+                  </div>
+                  <span className={`px-2.5 py-0.5 rounded text-[10px] ${signalColorClass}`}>
+                    {optionChain.trade_signal}
+                  </span>
+                </div>
+
+                {/* Trade Confidence Bar */}
+                <div className="mt-4 pb-4 border-b border-border-hairline">
+                  <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
+                    <span className="text-text-muted uppercase tracking-wider">Trade Conviction</span>
+                    <span className="font-bold text-text-heading">{optionChain.trade_confidence.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full bg-canvas-soft-2 h-2 rounded overflow-hidden">
+                    <div 
+                      className={`h-full rounded transition-all duration-500 ${
+                        optionChain.trade_signal === 'BUY CE' ? 'bg-gradient-to-r from-success/50 to-success' :
+                        optionChain.trade_signal === 'BUY PE' ? 'bg-gradient-to-r from-error/50 to-error' :
+                        'bg-text-muted/20'
+                      }`}
+                      style={{ width: `${optionChain.trade_confidence}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Levels Layout */}
+                <div className="grid grid-cols-3 gap-3 mt-4 text-center font-mono">
+                  <div className="bg-canvas-soft-2 p-2 rounded border border-border-hairline">
+                    <span className="text-[8px] text-text-muted uppercase tracking-wider block mb-1">Entry (ATM)</span>
+                    <span className="text-[11px] font-bold text-text-heading">{entryVal}</span>
+                  </div>
+                  <div className="bg-canvas-soft-2 p-2 rounded border border-border-hairline">
+                    <span className="text-[8px] text-text-muted uppercase tracking-wider block mb-1">Stop Loss (SL)</span>
+                    <span className="text-[11px] font-bold text-error">{slVal}</span>
+                  </div>
+                  <div className="bg-canvas-soft-2 p-2 rounded border border-border-hairline">
+                    <span className="text-[8px] text-text-muted uppercase tracking-wider block mb-1">Target (Tgt)</span>
+                    <span className="text-[11px] font-bold text-success">{tgtVal}</span>
+                  </div>
+                </div>
+
+                {/* Risk to Reward Ratio */}
+                {optionChain.trade_signal !== 'NO TRADE' && (
+                  <div className="mt-3 flex justify-between items-center text-[10px] font-mono px-1">
+                    <span className="text-text-muted">Risk-to-Reward Ratio:</span>
+                    <span className="font-bold text-cyan">1 : {rrRatio}</span>
+                  </div>
+                )}
+
+                {/* Rationale List */}
+                <div className="mt-4 pt-3 border-t border-border-hairline">
+                  <span className="text-[9px] text-text-muted uppercase tracking-wider block mb-2 font-mono">Algorithmic Rationale</span>
+                  <ul className="space-y-1.5">
+                    {optionChain.reason && optionChain.reason.length > 0 ? (
+                      optionChain.reason.map((reason, idx) => (
+                        <li key={idx} className="flex items-start text-[10px] text-text-body font-mono">
+                          <span className="text-cyan mr-1.5">✓</span>
+                          <span>{reason}</span>
+                        </li>
+                      ))
+                    ) : (
+                      <li className="text-[10px] text-text-muted italic font-mono">No recommendation reasons generated.</li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Option Chain Grid */}
           <div className="bg-canvas border border-border-hairline rounded-lg shadow-xl overflow-hidden">
             <div className="p-4 bg-canvas-soft border-b border-border-hairline flex justify-between items-center text-xs font-mono">
-              <span className="text-text-heading font-semibold">Option Chain - {optionChain.symbol} Expiry (Weekly/Monthly)</span>
+              <span className="text-text-heading font-semibold">Option Chain - {optionChain.symbol} Expiry ({optionChain.expiry})</span>
               <span className="text-text-muted">IV: ~{(optionChain.spot * 0.0006).toFixed(1)}% | Calls on Left | Puts on Right</span>
             </div>
 
@@ -194,7 +399,7 @@ export default function OptionsAnalytics() {
                           {roundLakhs(row.call.oi)}
                         </td>
                         <td className={`py-2 px-2 ${isCallItm ? 'bg-success/5' : ''} ${row.call.oiChange >= 0 ? 'text-success' : 'text-error'}`}>
-                          {row.call.oiChange >= 0 ? '+' : ''}{(row.call.oiChange / row.call.oi * 100).toFixed(1)}%
+                          {row.call.oiChange >= 0 ? '+' : ''}{(row.call.oiChange / (row.call.oi || 1) * 100).toFixed(1)}%
                         </td>
                         <td className={`py-2 px-2 text-text-muted ${isCallItm ? 'bg-success/5' : ''}`}>
                           {row.call.volume.toLocaleString()}
@@ -222,7 +427,7 @@ export default function OptionsAnalytics() {
                           {row.put.volume.toLocaleString()}
                         </td>
                         <td className={`py-2 px-2 ${isPutItm ? 'bg-error/5' : ''} ${row.put.oiChange >= 0 ? 'text-success' : 'text-error'}`}>
-                          {row.put.oiChange >= 0 ? '+' : ''}{(row.put.oiChange / row.put.oi * 100).toFixed(1)}%
+                          {row.put.oiChange >= 0 ? '+' : ''}{(row.put.oiChange / (row.put.oi || 1) * 100).toFixed(1)}%
                         </td>
                         <td className={`py-2 px-2 ${isPutItm ? 'bg-error/5' : ''}`}>
                           {roundLakhs(row.put.oi)}
@@ -244,3 +449,93 @@ function roundLakhs(val) {
   const lakhs = val / 100000
   return `${lakhs.toFixed(2)}L`
 }
+
+function OptionsPageSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      {/* Header Skeleton */}
+      <div className="pb-2 border-b border-border-hairline flex flex-col xl:flex-row justify-between space-y-4 xl:space-y-0">
+        <div className="space-y-2">
+          <div className="h-5 bg-canvas-soft-2 rounded w-64"></div>
+          <div className="h-3 bg-canvas-soft-2 rounded w-96"></div>
+        </div>
+        <div className="h-8 bg-canvas-soft-2 rounded w-48"></div>
+      </div>
+
+      {/* Top Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-canvas-soft border border-border-hairline rounded-lg p-5 h-24 flex flex-col justify-between">
+            <div className="h-3 bg-canvas-soft-2 rounded w-1/3"></div>
+            <div className="h-6 bg-canvas-soft-2 rounded w-2/3"></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Analytics & Recommendation Cards Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Option Analytics Card Skeleton */}
+        <div className="bg-canvas-soft border border-border-hairline rounded-lg p-6 h-96 flex flex-col justify-between">
+          <div className="space-y-3 pb-3 border-b border-border-hairline">
+            <div className="h-4 bg-canvas-soft-2 rounded w-1/2"></div>
+            <div className="h-3 bg-canvas-soft-2 rounded w-3/4"></div>
+          </div>
+          <div className="space-y-4 my-4 flex-1 justify-center flex flex-col">
+            <div className="space-y-2">
+              <div className="h-3 bg-canvas-soft-2 rounded w-1/4"></div>
+              <div className="h-2 bg-canvas-soft-2 rounded w-full"></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="h-10 bg-canvas-soft-2 rounded"></div>
+              <div className="h-10 bg-canvas-soft-2 rounded"></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="h-10 bg-canvas-soft-2 rounded"></div>
+              <div className="h-10 bg-canvas-soft-2 rounded"></div>
+            </div>
+          </div>
+          <div className="h-3 bg-canvas-soft-2 rounded w-1/4"></div>
+        </div>
+
+        {/* AI Trade Recommendation Card Skeleton */}
+        <div className="bg-canvas-soft border border-border-hairline rounded-lg p-6 h-96 flex flex-col justify-between">
+          <div className="space-y-3 pb-3 border-b border-border-hairline">
+            <div className="h-4 bg-canvas-soft-2 rounded w-1/2"></div>
+            <div className="h-3 bg-canvas-soft-2 rounded w-3/4"></div>
+          </div>
+          <div className="space-y-4 my-4 flex-1 justify-center flex flex-col">
+            <div className="space-y-2">
+              <div className="h-3 bg-canvas-soft-2 rounded w-1/4"></div>
+              <div className="h-2 bg-canvas-soft-2 rounded w-full"></div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="h-10 bg-canvas-soft-2 rounded"></div>
+              <div className="h-10 bg-canvas-soft-2 rounded"></div>
+              <div className="h-10 bg-canvas-soft-2 rounded"></div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-3 bg-canvas-soft-2 rounded w-full"></div>
+              <div className="h-3 bg-canvas-soft-2 rounded w-5/6"></div>
+            </div>
+          </div>
+          <div className="h-3 bg-canvas-soft-2 rounded w-1/4"></div>
+        </div>
+      </div>
+
+      {/* Table Skeleton */}
+      <div className="bg-canvas border border-border-hairline rounded-lg overflow-hidden">
+        <div className="p-4 bg-canvas-soft h-12 flex justify-between items-center">
+          <div className="h-4 bg-canvas-soft-2 rounded w-48"></div>
+          <div className="h-3 bg-canvas-soft-2 rounded w-32"></div>
+        </div>
+        <div className="p-4 space-y-3">
+          <div className="h-6 bg-canvas-soft-2 rounded w-full"></div>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-8 bg-canvas-soft-2/50 rounded w-full"></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
