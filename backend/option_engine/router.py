@@ -7,6 +7,7 @@ from option_engine.support_resistance import calculate_support_resistance
 from option_engine.writing_analysis import analyze_writing
 from option_engine.confidence_engine import calculate_confidence
 from option_engine.greeks_engine import calculate_atm_greeks
+from option_engine.trade_recommendation import generate_recommendation
 
 router = APIRouter(tags=["Option Engine"])
 fyers_client = FyersClient()
@@ -284,6 +285,20 @@ def get_option_chain(
         put_writing=writing_data["put_writing"]
     )
     atm_greeks = calculate_atm_greeks(options_list, atm_strike)
+    trade_data = generate_recommendation(
+        spot_price=float(spot),
+        pcr=float(pcr),
+        max_pain=float(max_pain),
+        atm_strike=float(atm_strike),
+        support_1=float(sr_data["support_1"]),
+        support_confidence=float(sr_data["support_confidence"]),
+        resistance_1=float(sr_data["resistance_1"]),
+        resistance_confidence=float(sr_data["resistance_confidence"]),
+        call_writing=writing_data["call_writing"],
+        put_writing=writing_data["put_writing"],
+        market_bias=conf_data["market_bias"],
+        confidence_score=float(conf_data["confidence_score"])
+    )
 
     return {
         "symbol":                symbol.upper(),
@@ -303,6 +318,12 @@ def get_option_chain(
         "market_bias":           conf_data["market_bias"],
         "confidence_score":      float(conf_data["confidence_score"]),
         "atm_greeks":            atm_greeks,
+        "trade_signal":          trade_data["trade_signal"],
+        "entry":                 float(trade_data["entry"]),
+        "stop_loss":             float(trade_data["stop_loss"]),
+        "target":                float(trade_data["target"]),
+        "trade_confidence":      float(trade_data["trade_confidence"]),
+        "reason":                trade_data["reason"],
         "chain":                 chain,
     }
 
