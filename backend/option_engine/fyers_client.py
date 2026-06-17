@@ -122,3 +122,47 @@ class FyersClient:
             )
 
         return data
+
+    def fetch_quotes(self, symbols: list[str]) -> list:
+        """
+        Fetch quotes data for a list of symbols from Fyers.
+        symbols: list of Fyers symbols e.g. ["NSE:NIFTY26JUNFUT"]
+        """
+        fyers = self._get_fyers_model()
+        payload = {"symbols": ",".join(symbols)}
+        try:
+            response = fyers.quotes(data=payload)
+        except Exception as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Fyers SDK quotes query raised an exception: {str(e)}"
+            )
+
+        if not isinstance(response, dict):
+            raise HTTPException(
+                status_code=503,
+                detail="Unexpected non-dict response from Fyers SDK quotes."
+            )
+
+        status = response.get("s") or response.get("code")
+        if status not in ("ok", 200):
+            fyers_message = (
+                response.get("message")
+                or response.get("errmsg")
+                or response.get("msg")
+                or str(response)
+            )
+            raise HTTPException(
+                status_code=503,
+                detail=f"Fyers API error in quotes ({status}): {fyers_message}"
+            )
+
+        data = response.get("d")
+        if not data:
+            raise HTTPException(
+                status_code=503,
+                detail="Fyers returned empty 'd' list in quotes response."
+            )
+
+        return data
+

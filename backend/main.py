@@ -13,6 +13,9 @@ from option_engine.router import router as option_router
 from sector_engine.router import router as sector_router
 from sentiment_engine.router import router as sentiment_router
 from support_engine.router import router as support_router
+from futures_engine.router import router as futures_router
+from smart_money_engine.router import router as smart_money_router
+from vix_engine.router import router as vix_router
 
 app = FastAPI(
     title="Bazaar Mood API",
@@ -39,6 +42,9 @@ app.include_router(option_router)
 app.include_router(sector_router)
 app.include_router(sentiment_router)
 app.include_router(support_router)
+app.include_router(futures_router)
+app.include_router(smart_money_router)
+app.include_router(vix_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="localhost", port=8000, reload=True)

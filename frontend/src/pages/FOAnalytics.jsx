@@ -15,7 +15,7 @@ export default function FOAnalytics() {
         throw new Error('F&O derivatives buildup feed is currently unavailable - live broker feed required.')
       }
       const data = await response.json()
-      setStocks(data)
+      setStocks(data || [])
     } catch (err) {
       setError(err.message || 'Failed to fetch F&O buildup details')
     } finally {
@@ -27,7 +27,8 @@ export default function FOAnalytics() {
     fetchFOData()
   }, [])
 
-  const filteredStocks = stocks.filter(stock => {
+  const filteredStocks = (stocks || []).filter(stock => {
+    if (!stock) return false
     if (activeFilter === 'ALL') return true
     if (activeFilter === 'BULLISH') return stock.tone === 'bullish'
     if (activeFilter === 'BEARISH') return stock.tone === 'bearish'
@@ -72,16 +73,16 @@ export default function FOAnalytics() {
             </span>
           </h1>
           <p className="text-xs text-text-muted mt-0.5">
-            Buildup analysis of Nifty stock futures using price-action and open interest changes.
+            Buildup analysis of option chain strikes using price-action and open interest changes.
           </p>
         </div>
 
         {/* Filter controls */}
         <div className="flex flex-wrap gap-1 bg-canvas-soft-2 p-1 rounded-lg border border-border-hairline self-start">
           {[
-            { label: 'All Stocks', value: 'ALL' },
-            { label: 'Bullish Build-ups', value: 'BULLISH' },
-            { label: 'Bearish Build-ups', value: 'BEARISH' },
+            { label: 'All Contracts', value: 'ALL' },
+            { label: 'Bullish Tone', value: 'BULLISH' },
+            { label: 'Bearish Tone', value: 'BEARISH' },
             { label: 'Long Buildup', value: 'LONG_BUILDUP' },
             { label: 'Short Buildup', value: 'SHORT_BUILDUP' }
           ].map(btn => (
@@ -106,37 +107,44 @@ export default function FOAnalytics() {
           <table className="w-full text-left border-collapse select-none">
             <thead>
               <tr className="bg-canvas-soft border-b border-border-hairline text-[10px] font-mono uppercase text-text-muted">
-                <th className="py-3 px-5">Symbol</th>
-                <th className="py-3 px-5">LTP (Rs.)</th>
-                <th className="py-3 px-5">Price Change (%)</th>
-                <th className="py-3 px-5">OI Change (%)</th>
-                <th className="py-3 px-5">Volume</th>
+                <th className="py-3 px-5">Option Contract / Strike</th>
+                <th className="py-3 px-5">OI Change</th>
+                <th className="py-3 px-5">Market Tone</th>
                 <th className="py-3 px-5">Derivative Buildup</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-hairline font-mono text-xs text-text-body">
-              {filteredStocks.map((stock) => (
-                <tr key={stock.symbol} className="hover:bg-canvas-soft-2/40">
-                  <td className="py-3.5 px-5 font-sans font-bold text-text-heading">{stock.symbol}</td>
-                  <td className="py-3.5 px-5 font-semibold">{stock.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                  <td className={`py-3.5 px-5 font-bold ${stock.change >= 0 ? 'text-success' : 'text-error'}`}>
-                    {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
+              {filteredStocks.map((stock, idx) => (
+                <tr key={stock?.strike || idx} className="hover:bg-canvas-soft-2/40">
+                  <td className="py-3.5 px-5 font-sans font-bold text-text-heading">{stock?.strike || 'N/A'}</td>
+                  <td className={`py-3.5 px-5 font-semibold ${stock?.tone === 'bullish' ? 'text-success' : 'text-error'}`}>
+                    {stock?.oiChange || 'N/A'}
                   </td>
-                  <td className={`py-3.5 px-5 font-semibold ${stock.oiChange >= 0 ? 'text-success' : 'text-error'}`}>
-                    {stock.oiChange >= 0 ? '+' : ''}{stock.oiChange.toFixed(2)}%
+                  <td className="py-3.5 px-5">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-sans font-bold uppercase ${
+                      stock?.tone === 'bullish' ? 'bg-success/15 text-success' : 'bg-error/15 text-error'
+                    }`}>
+                      {stock?.tone || 'N/A'}
+                    </span>
                   </td>
-                  <td className="py-3.5 px-5 text-text-muted">{stock.volume.toLocaleString()}</td>
                   <td className="py-3.5 px-5">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-sans font-bold tracking-wide ${
-                      stock.type === 'Long Buildup' ? 'bg-success/15 text-success' :
-                      stock.type === 'Short Covering' ? 'bg-cyan/15 text-cyan' :
-                      stock.type === 'Short Buildup' ? 'bg-error/15 text-error' : 'bg-warning/15 text-warning'
+                      stock?.type === 'Long Buildup' ? 'bg-success/15 text-success' :
+                      stock?.type === 'Short Covering' ? 'bg-cyan/15 text-cyan' :
+                      stock?.type === 'Short Buildup' ? 'bg-error/15 text-error' : 'bg-warning/15 text-warning'
                     }`}>
-                      {stock.type}
+                      {stock?.type || 'N/A'}
                     </span>
                   </td>
                 </tr>
               ))}
+              {filteredStocks.length === 0 && (
+                <tr>
+                  <td colSpan="4" className="py-8 text-center text-text-muted italic">
+                    No buildup contracts match the selected filter.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -144,3 +152,4 @@ export default function FOAnalytics() {
     </div>
   )
 }
+

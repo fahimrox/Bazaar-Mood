@@ -1,6 +1,7 @@
 import urllib.request
 import json
 from fastapi import APIRouter, HTTPException, Query
+from data_engine.constituent_data import get_constituent_data
 
 router = APIRouter(tags=["Data Engine"])
 
@@ -136,17 +137,68 @@ def get_indices():
 
 @router.get("/market-breadth")
 def get_market_breadth(symbol: str = Query("NIFTY")):
-    raise HTTPException(
-        status_code=503, 
-        detail="Market breadth data is unavailable - live broker feed required."
-    )
+    constituents = get_constituent_data()
+    
+    # Breadth calculation: count advances/declines/unchanged
+    advancing = sum(1 for c in constituents if c["change_percent"] > 0.05)
+    declining = sum(1 for c in constituents if c["change_percent"] < -0.05)
+    unchanged = len(constituents) - advancing - declining
+    
+    if declining > 0:
+        ad_ratio = round(advancing / declining, 2)
+    else:
+        ad_ratio = float(advancing)
+        
+    if ad_ratio >= 1.5:
+        status = "Bullish"
+    elif ad_ratio <= 0.65:
+        status = "Bearish"
+    else:
+        status = "Neutral"
+        
+    return {
+        "advancing": advancing,
+        "declining": declining,
+        "unchanged": unchanged,
+        "advances": advancing,    # Frontend compatibility
+        "declines": declining,     # Frontend compatibility
+        "ad_ratio": ad_ratio,
+        "breadth_status": status
+    }
 
 @router.get("/top-movers")
 def get_top_movers(symbol: str = Query("NIFTY")):
-    raise HTTPException(
-        status_code=503, 
-        detail="Top component movers data is unavailable - live broker feed required."
-    )
+    constituents = get_constituent_data()
+    
+    # Sort by percentage change
+    sorted_by_change = sorted(constituents, key=lambda x: x["change_percent"], reverse=True)
+    
+    gainers = []
+    for c in sorted_by_change[:10]:
+        gainers.append({
+            "symbol": c["symbol"],
+            "price": c["last_price"],
+            "pct": c["change_percent"],
+            "change_percent": c["change_percent"],
+            "volume": c["volume"],
+            "company_name": c["company_name"]
+        })
+        
+    losers = []
+    for c in reversed(sorted_by_change[-10:]):
+        losers.append({
+            "symbol": c["symbol"],
+            "price": c["last_price"],
+            "pct": c["change_percent"],
+            "change_percent": c["change_percent"],
+            "volume": c["volume"],
+            "company_name": c["company_name"]
+        })
+        
+    return {
+        "gainers": gainers,
+        "losers": losers
+    }
 
 @router.get("/market-structure")
 def get_market_structure(symbol: str = Query("NIFTY")):
@@ -210,17 +262,142 @@ def get_market_structure(symbol: str = Query("NIFTY")):
     }
 
 @router.get("/screeners")
-def get_screeners():
-    raise HTTPException(
-        status_code=503,
-        detail="Screener data is unavailable - live broker feed required."
-    )
+def get_screeners(symbol: str = Query(None)):
+    constituents = get_constituent_data()
+    
+    # 1. VOLUME_SHOCKERS
+    vol_shockers = sorted(constituents, key=lambda x: x["volume_ratio"], reverse=True)
+    vol_shockers_data = [
+        {
+            "symbol": c["symbol"],
+            "price": c["last_price"],
+            "change": c["change_percent"],
+            "metricVal": f"{c['volume_ratio']:.1f}x Vol",
+            "detail": f"Volume spike of {c['volume_ratio']:.1f}x relative to 10-day average."
+        }
+        for c in vol_shockers[:10]
+    ]
+    
+    # 2. RSI_OVERSOLD
+    rsi_oversold = sorted(constituents, key=lambda x: x["rsi_14"])
+    rsi_oversold_data = [
+        {
+            "symbol": c["symbol"],
+            "price": c["last_price"],
+            "change": c["change_percent"],
+            "metricVal": f"RSI: {c['rsi_14']:.1f}",
+            "detail": f"Oversold RSI at {c['rsi_14']:.1f}. Potential bullish reversal zone."
+        }
+        for c in rsi_oversold[:10]
+    ]
+    
+    # 3. RSI_OVERBOUGHT
+    rsi_overbought = sorted(constituents, key=lambda x: x["rsi_14"], reverse=True)
+    rsi_overbought_data = [
+        {
+            "symbol": c["symbol"],
+            "price": c["last_price"],
+            "change": c["change_percent"],
+            "metricVal": f"RSI: {c['rsi_14']:.1f}",
+            "detail": f"Overbought RSI at {c['rsi_14']:.1f}. Overextended bullish momentum."
+        }
+        for c in rsi_overbought[:10]
+    ]
+    
+    # 4. OI_SPIKE
+    oi_spike = sorted(constituents, key=lambda x: x["volume_ratio"] * abs(x["change_percent"]), reverse=True)
+    oi_spike_data = [
+        {
+            "symbol": c["symbol"],
+            "price": c["last_price"],
+            "change": c["change_percent"],
+            "metricVal": f"Vol: {c['volume_ratio']:.1f}x",
+            "detail": f"Price change of {c['change_percent']:.1f}% backed by {c['volume_ratio']:.1f}x volume expansion."
+        }
+        for c in oi_spike[:10]
+    ]
+    
+    # Return specific scanner results for Screeners.jsx component
+    if symbol == "VOLUME_SHOCKERS":
+        return vol_shockers_data
+    elif symbol == "RSI_OVERSOLD":
+        return rsi_oversold_data
+    elif symbol == "RSI_OVERBOUGHT":
+        return rsi_overbought_data
+    elif symbol == "OI_SPIKE":
+        return oi_spike_data
+        
+    # Fallback to high-level dictionary requested in the prompt
+    strongest = sorted(constituents, key=lambda x: x["change_percent"], reverse=True)[:10]
+    weakest = sorted(constituents, key=lambda x: x["change_percent"])[:10]
+    high_vol = sorted(constituents, key=lambda x: x["volume"], reverse=True)[:10]
+    
+    return {
+        "strongest_stocks": [
+            {
+                "symbol": c["symbol"],
+                "company_name": c["company_name"],
+                "last_price": c["last_price"],
+                "change_percent": c["change_percent"],
+                "volume": c["volume"],
+                "market_cap": c["market_cap"],
+                "sector": c["sector"]
+            }
+            for c in strongest
+        ],
+        "weakest_stocks": [
+            {
+                "symbol": c["symbol"],
+                "company_name": c["company_name"],
+                "last_price": c["last_price"],
+                "change_percent": c["change_percent"],
+                "volume": c["volume"],
+                "market_cap": c["market_cap"],
+                "sector": c["sector"]
+            }
+            for c in weakest
+        ],
+        "highest_volume": [
+            {
+                "symbol": c["symbol"],
+                "company_name": c["company_name"],
+                "last_price": c["last_price"],
+                "change_percent": c["change_percent"],
+                "volume": c["volume"],
+                "market_cap": c["market_cap"],
+                "sector": c["sector"]
+            }
+            for c in high_vol
+        ]
+    }
 
 @router.get("/heatmaps")
-def get_heatmaps():
-    raise HTTPException(
-        status_code=503,
-        detail="Heatmap data is unavailable - live broker feed required."
-    )
-
-
+def get_heatmaps(format: str = Query(None)):
+    constituents = get_constituent_data()
+    
+    if format == "flat":
+        return [
+            {
+                "symbol": c["symbol"],
+                "change_percent": c["change_percent"],
+                "sector": c["sector"],
+                "market_cap": c["market_cap"]
+            }
+            for c in constituents
+        ]
+        
+    # Default to sector-grouped dictionary required by Heatmaps.jsx component
+    grouped = {}
+    for c in constituents:
+        sec = c["sector"]
+        if sec not in grouped:
+            grouped[sec] = []
+        grouped[sec].append({
+            "symbol": c["symbol"],
+            "price": c["last_price"],
+            "change": c["change_percent"],
+            "change_percent": c["change_percent"],
+            "sector": c["sector"],
+            "market_cap": c["market_cap"]
+        })
+    return grouped

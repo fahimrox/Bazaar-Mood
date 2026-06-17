@@ -8,6 +8,7 @@ from option_engine.writing_analysis import analyze_writing
 from option_engine.confidence_engine import calculate_confidence
 from option_engine.greeks_engine import calculate_atm_greeks
 from option_engine.trade_recommendation import generate_recommendation
+from option_engine.oi_structure import analyze_oi_structure
 
 router = APIRouter(tags=["Option Engine"])
 fyers_client = FyersClient()
@@ -300,6 +301,8 @@ def get_option_chain(
         confidence_score=float(conf_data["confidence_score"])
     )
 
+    oi_struct_data = analyze_oi_structure(chain, atm_strike)
+
     return {
         "symbol":                symbol.upper(),
         "spot":                  float(spot),
@@ -324,6 +327,11 @@ def get_option_chain(
         "target":                float(trade_data["target"]),
         "trade_confidence":      float(trade_data["trade_confidence"]),
         "reason":                trade_data["reason"],
+        "call_unwinding":        oi_struct_data["call_unwinding"],
+        "put_unwinding":         oi_struct_data["put_unwinding"],
+        "short_covering":        oi_struct_data["short_covering"],
+        "long_buildup":          oi_struct_data["long_buildup"],
+        "oi_structure":          oi_struct_data,
         "chain":                 chain,
     }
 

@@ -56,7 +56,7 @@ export default function OptionsAnalytics() {
     Bearish: 'bg-error/10 text-error border border-error/20',
     Neutral: 'bg-warning/10 text-warning border border-warning/20',
   }
-  const biasColorClass = optionChain ? (biasColors[optionChain.market_bias] || 'bg-canvas-soft-2 text-text-muted border border-border-hairline') : ''
+  const biasColorClass = optionChain ? (biasColors[optionChain?.market_bias] || 'bg-canvas-soft-2 text-text-muted border border-border-hairline') : ''
 
   // Trade Signal Style Helpers
   const signalColors = {
@@ -64,22 +64,22 @@ export default function OptionsAnalytics() {
     'BUY PE': 'bg-error/15 text-error border border-error/30 font-bold',
     'NO TRADE': 'bg-canvas-soft-2 text-text-muted border border-border-hairline font-semibold',
   }
-  const signalColorClass = optionChain ? (signalColors[optionChain.trade_signal] || 'bg-canvas-soft-2 text-text-muted border border-border-hairline') : ''
+  const signalColorClass = optionChain ? (signalColors[optionChain?.trade_signal] || 'bg-canvas-soft-2 text-text-muted border border-border-hairline') : ''
 
   // Format trade parameters safely
-  const entryVal = optionChain && optionChain.entry > 0 ? optionChain.entry.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'
-  const slVal = optionChain && optionChain.stop_loss > 0 ? optionChain.stop_loss.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'
-  const tgtVal = optionChain && optionChain.target > 0 ? optionChain.target.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'
+  const entryVal = optionChain && optionChain?.entry > 0 ? optionChain.entry.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'
+  const slVal = optionChain && optionChain?.stop_loss > 0 ? optionChain.stop_loss.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'
+  const tgtVal = optionChain && optionChain?.target > 0 ? optionChain.target.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'
 
   // Calculate Risk-to-Reward Ratio dynamically
   let rrRatio = '0.0'
   if (optionChain) {
-    if (optionChain.trade_signal === 'BUY CE' && optionChain.entry > 0 && optionChain.stop_loss > 0 && optionChain.target > 0) {
+    if (optionChain?.trade_signal === 'BUY CE' && optionChain?.entry > 0 && optionChain?.stop_loss > 0 && optionChain?.target > 0) {
       const risk = optionChain.entry - optionChain.stop_loss
       if (risk > 0) {
         rrRatio = ((optionChain.target - optionChain.entry) / risk).toFixed(1)
       }
-    } else if (optionChain.trade_signal === 'BUY PE' && optionChain.entry > 0 && optionChain.stop_loss > 0 && optionChain.target > 0) {
+    } else if (optionChain?.trade_signal === 'BUY PE' && optionChain?.entry > 0 && optionChain?.stop_loss > 0 && optionChain?.target > 0) {
       const risk = optionChain.stop_loss - optionChain.entry
       if (risk > 0) {
         rrRatio = ((optionChain.entry - optionChain.target) / risk).toFixed(1)
@@ -150,7 +150,7 @@ export default function OptionsAnalytics() {
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Spot Price</span>
                 <div className="text-xl font-bold font-mono text-text-heading mt-1">
-                  {optionChain.spot.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  {optionChain?.spot !== undefined ? optionChain.spot.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'}
                 </div>
               </div>
               <span className="text-2xl">🎯</span>
@@ -161,12 +161,12 @@ export default function OptionsAnalytics() {
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Put-Call Ratio (PCR)</span>
                 <div className="text-xl font-bold font-mono text-text-heading mt-1 flex items-baseline space-x-2">
-                  <span>{optionChain.pcr}</span>
+                  <span>{optionChain?.pcr !== undefined ? optionChain.pcr : 'N/A'}</span>
                   <span className={`text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded ${
-                    optionChain.pcr > 1.1 ? 'bg-success/15 text-success' :
-                    optionChain.pcr < 0.9 ? 'bg-error/15 text-error' : 'bg-canvas-soft-2 text-text-muted'
+                    optionChain?.pcr > 1.1 ? 'bg-success/15 text-success' :
+                    optionChain?.pcr < 0.9 ? 'bg-error/15 text-error' : 'bg-canvas-soft-2 text-text-muted'
                   }`}>
-                    {optionChain.pcr > 1.1 ? 'Bullish' : optionChain.pcr < 0.9 ? 'Bearish' : 'Neutral'}
+                    {optionChain?.pcr > 1.1 ? 'Bullish' : optionChain?.pcr < 0.9 ? 'Bearish' : 'Neutral'}
                   </span>
                 </div>
               </div>
@@ -178,7 +178,7 @@ export default function OptionsAnalytics() {
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Max Pain Strike</span>
                 <div className="text-xl font-bold font-mono text-text-heading mt-1">
-                  {optionChain.maxPain.toLocaleString('en-IN')}
+                  {optionChain?.maxPain !== undefined ? optionChain.maxPain.toLocaleString('en-IN') : 'N/A'}
                 </div>
               </div>
               <span className="text-2xl">⚡</span>
@@ -200,7 +200,7 @@ export default function OptionsAnalytics() {
                     <p className="text-[10px] text-text-muted mt-0.5">Real-time OI and volatility characteristics</p>
                   </div>
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase ${biasColorClass}`}>
-                    {optionChain.market_bias} Bias
+                    {optionChain?.market_bias || 'Neutral'} Bias
                   </span>
                 </div>
 
@@ -208,12 +208,12 @@ export default function OptionsAnalytics() {
                 <div className="mt-4 pb-4 border-b border-border-hairline">
                   <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
                     <span className="text-text-muted uppercase tracking-wider">Market Conviction</span>
-                    <span className="font-bold text-text-heading">{optionChain.confidence_score.toFixed(1)}%</span>
+                    <span className="font-bold text-text-heading">{(optionChain?.confidence_score || 0).toFixed(1)}%</span>
                   </div>
                   <div className="w-full bg-canvas-soft-2 h-2 rounded overflow-hidden">
                     <div 
                       className="bg-gradient-to-r from-violet via-accent to-cyan h-full rounded transition-all duration-500" 
-                      style={{ width: `${optionChain.confidence_score}%` }}
+                      style={{ width: `${optionChain?.confidence_score || 0}%` }}
                     ></div>
                   </div>
                 </div>
@@ -224,15 +224,15 @@ export default function OptionsAnalytics() {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-text-muted">PCR:</span>
-                      <span className="text-text-heading font-semibold">{optionChain.pcr}</span>
+                      <span className="text-text-heading font-semibold">{optionChain?.pcr !== undefined ? optionChain.pcr : 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-text-muted">Max Pain:</span>
-                      <span className="text-text-heading font-semibold">{optionChain.maxPain.toLocaleString('en-IN')}</span>
+                      <span className="text-text-heading font-semibold">{optionChain?.maxPain !== undefined ? optionChain.maxPain.toLocaleString('en-IN') : 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-text-muted">ATM Strike:</span>
-                      <span className="text-text-heading font-semibold text-cyan">{optionChain.atm_strike.toLocaleString('en-IN')}</span>
+                      <span className="text-text-heading font-semibold text-cyan">{optionChain?.atm_strike !== undefined ? optionChain.atm_strike.toLocaleString('en-IN') : 'N/A'}</span>
                     </div>
                   </div>
 
@@ -241,15 +241,19 @@ export default function OptionsAnalytics() {
                     <div className="flex justify-between">
                       <span className="text-text-muted">Support (S1):</span>
                       <span className="text-text-heading font-semibold">
-                        {optionChain.support_1.toLocaleString('en-IN')}
-                        <span className="text-[9px] text-success ml-1">({optionChain.support_confidence.toFixed(0)}%)</span>
+                        {optionChain?.support_1 !== undefined ? optionChain.support_1.toLocaleString('en-IN') : 'N/A'}
+                        {optionChain?.support_confidence !== undefined && (
+                          <span className="text-[9px] text-success ml-1">({optionChain.support_confidence.toFixed(0)}%)</span>
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-text-muted">Resistance (R1):</span>
                       <span className="text-text-heading font-semibold">
-                        {optionChain.resistance_1.toLocaleString('en-IN')}
-                        <span className="text-[9px] text-error ml-1">({optionChain.resistance_confidence.toFixed(0)}%)</span>
+                        {optionChain?.resistance_1 !== undefined ? optionChain.resistance_1.toLocaleString('en-IN') : 'N/A'}
+                        {optionChain?.resistance_confidence !== undefined && (
+                          <span className="text-[9px] text-error ml-1">({optionChain.resistance_confidence.toFixed(0)}%)</span>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -259,23 +263,73 @@ export default function OptionsAnalytics() {
                 <div className="mt-4 pt-4 border-t border-border-hairline grid grid-cols-2 gap-4 text-[11px] font-mono">
                   <div>
                     <span className="text-[9px] text-text-muted uppercase tracking-wider block">Call Writing (Resistance)</span>
-                    <span className={`font-semibold ${optionChain.call_writing === 'Strong' ? 'text-error' : optionChain.call_writing === 'Moderate' ? 'text-warning' : 'text-text-muted'}`}>
-                      {optionChain.call_writing}
+                    <span className={`font-semibold ${optionChain?.call_writing === 'Strong' ? 'text-error' : optionChain?.call_writing === 'Moderate' ? 'text-warning' : 'text-text-muted'}`}>
+                      {optionChain?.call_writing || 'N/A'}
                     </span>
-                    {optionChain.call_writing_strike > 0 && (
+                    {optionChain?.call_writing_strike > 0 && (
                       <span className="text-[10px] text-text-heading ml-1.5 font-bold">@ {optionChain.call_writing_strike.toLocaleString('en-IN')}</span>
                     )}
                   </div>
                   <div>
                     <span className="text-[9px] text-text-muted uppercase tracking-wider block">Put Writing (Support)</span>
-                    <span className={`font-semibold ${optionChain.put_writing === 'Strong' ? 'text-success' : optionChain.put_writing === 'Moderate' ? 'text-warning' : 'text-text-muted'}`}>
-                      {optionChain.put_writing}
+                    <span className={`font-semibold ${optionChain?.put_writing === 'Strong' ? 'text-success' : optionChain?.put_writing === 'Moderate' ? 'text-warning' : 'text-text-muted'}`}>
+                      {optionChain?.put_writing || 'N/A'}
                     </span>
-                    {optionChain.put_writing_strike > 0 && (
+                    {optionChain?.put_writing_strike > 0 && (
                       <span className="text-[10px] text-text-heading ml-1.5 font-bold">@ {optionChain.put_writing_strike.toLocaleString('en-IN')}</span>
                     )}
                   </div>
                 </div>
+
+                {/* ATM Greeks Section */}
+                <div className="mt-4 pt-4 border-t border-border-hairline">
+                  <span className="text-[9px] text-text-muted uppercase tracking-wider block mb-2">ATM Greeks</span>
+                  <div className="grid grid-cols-2 gap-4 text-[10px] font-mono">
+                    <div className="bg-canvas-soft-2 p-2 rounded border border-border-hairline/50">
+                      <div className="text-[8px] text-text-muted uppercase mb-1">Call ATM Greeks</div>
+                      <div className="flex justify-between">
+                        <span>IV:</span>
+                        <span className="font-bold text-text-heading">
+                          {optionChain?.atm_greeks?.ce_iv !== undefined ? `${optionChain.atm_greeks.ce_iv}%` : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Delta:</span>
+                        <span className="font-bold text-success">
+                          {optionChain?.atm_greeks?.ce_delta !== undefined ? optionChain.atm_greeks.ce_delta.toFixed(2) : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Theta:</span>
+                        <span className="font-bold text-error">
+                          {optionChain?.atm_greeks?.ce_theta !== undefined ? optionChain.atm_greeks.ce_theta.toFixed(2) : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="bg-canvas-soft-2 p-2 rounded border border-border-hairline/50">
+                      <div className="text-[8px] text-text-muted uppercase mb-1">Put ATM Greeks</div>
+                      <div className="flex justify-between">
+                        <span>IV:</span>
+                        <span className="font-bold text-text-heading">
+                          {optionChain?.atm_greeks?.pe_iv !== undefined ? `${optionChain.atm_greeks.pe_iv}%` : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Delta:</span>
+                        <span className="font-bold text-error">
+                          {optionChain?.atm_greeks?.pe_delta !== undefined ? optionChain.atm_greeks.pe_delta.toFixed(2) : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Theta:</span>
+                        <span className="font-bold text-error">
+                          {optionChain?.atm_greeks?.pe_theta !== undefined ? optionChain.atm_greeks.pe_theta.toFixed(2) : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
 
@@ -291,7 +345,7 @@ export default function OptionsAnalytics() {
                     <p className="text-[10px] text-text-muted mt-0.5">Automated signal & risk positioning</p>
                   </div>
                   <span className={`px-2.5 py-0.5 rounded text-[10px] ${signalColorClass}`}>
-                    {optionChain.trade_signal}
+                    {optionChain?.trade_signal || 'NO TRADE'}
                   </span>
                 </div>
 
@@ -299,16 +353,16 @@ export default function OptionsAnalytics() {
                 <div className="mt-4 pb-4 border-b border-border-hairline">
                   <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
                     <span className="text-text-muted uppercase tracking-wider">Trade Conviction</span>
-                    <span className="font-bold text-text-heading">{optionChain.trade_confidence.toFixed(1)}%</span>
+                    <span className="font-bold text-text-heading">{(optionChain?.trade_confidence || 0).toFixed(1)}%</span>
                   </div>
                   <div className="w-full bg-canvas-soft-2 h-2 rounded overflow-hidden">
                     <div 
                       className={`h-full rounded transition-all duration-500 ${
-                        optionChain.trade_signal === 'BUY CE' ? 'bg-gradient-to-r from-success/50 to-success' :
-                        optionChain.trade_signal === 'BUY PE' ? 'bg-gradient-to-r from-error/50 to-error' :
+                        optionChain?.trade_signal === 'BUY CE' ? 'bg-gradient-to-r from-success/50 to-success' :
+                        optionChain?.trade_signal === 'BUY PE' ? 'bg-gradient-to-r from-error/50 to-error' :
                         'bg-text-muted/20'
                       }`}
-                      style={{ width: `${optionChain.trade_confidence}%` }}
+                      style={{ width: `${optionChain?.trade_confidence || 0}%` }}
                     ></div>
                   </div>
                 </div>
@@ -330,7 +384,7 @@ export default function OptionsAnalytics() {
                 </div>
 
                 {/* Risk to Reward Ratio */}
-                {optionChain.trade_signal !== 'NO TRADE' && (
+                {optionChain?.trade_signal !== 'NO TRADE' && (
                   <div className="mt-3 flex justify-between items-center text-[10px] font-mono px-1">
                     <span className="text-text-muted">Risk-to-Reward Ratio:</span>
                     <span className="font-bold text-cyan">1 : {rrRatio}</span>
@@ -341,7 +395,7 @@ export default function OptionsAnalytics() {
                 <div className="mt-4 pt-3 border-t border-border-hairline">
                   <span className="text-[9px] text-text-muted uppercase tracking-wider block mb-2 font-mono">Algorithmic Rationale</span>
                   <ul className="space-y-1.5">
-                    {optionChain.reason && optionChain.reason.length > 0 ? (
+                    {optionChain?.reason && optionChain.reason.length > 0 ? (
                       optionChain.reason.map((reason, idx) => (
                         <li key={idx} className="flex items-start text-[10px] text-text-body font-mono">
                           <span className="text-cyan mr-1.5">✓</span>
@@ -360,8 +414,8 @@ export default function OptionsAnalytics() {
           {/* Option Chain Grid */}
           <div className="bg-canvas border border-border-hairline rounded-lg shadow-xl overflow-hidden">
             <div className="p-4 bg-canvas-soft border-b border-border-hairline flex justify-between items-center text-xs font-mono">
-              <span className="text-text-heading font-semibold">Option Chain - {optionChain.symbol} Expiry ({optionChain.expiry})</span>
-              <span className="text-text-muted">IV: ~{(optionChain.spot * 0.0006).toFixed(1)}% | Calls on Left | Puts on Right</span>
+              <span className="text-text-heading font-semibold">Option Chain - {optionChain?.symbol || ''} Expiry ({optionChain?.expiry || ''})</span>
+              <span className="text-text-muted">IV: ~{((optionChain?.spot || 0) * 0.0006).toFixed(1)}% | Calls on Left | Puts on Right</span>
             </div>
 
             <div className="overflow-x-auto">
@@ -387,9 +441,9 @@ export default function OptionsAnalytics() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-hairline font-mono text-[11px] text-text-body">
-                  {optionChain.chain.map((row) => {
-                    const isCallItm = optionChain.spot > row.strike
-                    const isPutItm = optionChain.spot < row.strike
+                  {(optionChain?.chain || []).map((row) => {
+                    const isCallItm = (optionChain?.spot || 0) > row.strike
+                    const isPutItm = (optionChain?.spot || 0) < row.strike
                     const isAtm = row.is_atm
                     
                     return (
