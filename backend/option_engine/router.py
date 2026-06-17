@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 from option_engine.fyers_client import FyersClient
 from option_engine.strike_utils import get_atm_strike
 from option_engine.support_resistance import calculate_support_resistance
+from option_engine.writing_analysis import analyze_writing
 
 router = APIRouter(tags=["Option Engine"])
 fyers_client = FyersClient()
@@ -267,6 +268,7 @@ def get_option_chain(
     max_pain  = _calculate_max_pain(chain)
 
     sr_data = calculate_support_resistance(chain, atm_strike)
+    writing_data = analyze_writing(chain, atm_strike)
 
     return {
         "symbol":                symbol.upper(),
@@ -279,6 +281,10 @@ def get_option_chain(
         "support_confidence":    float(sr_data["support_confidence"]),
         "resistance_1":          float(sr_data["resistance_1"]),
         "resistance_confidence": float(sr_data["resistance_confidence"]),
+        "call_writing":          writing_data["call_writing"],
+        "call_writing_strike":   float(writing_data["call_writing_strike"]),
+        "put_writing":           writing_data["put_writing"],
+        "put_writing_strike":    float(writing_data["put_writing_strike"]),
         "chain":                 chain,
     }
 
