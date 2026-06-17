@@ -6,6 +6,7 @@ from option_engine.strike_utils import get_atm_strike
 from option_engine.support_resistance import calculate_support_resistance
 from option_engine.writing_analysis import analyze_writing
 from option_engine.confidence_engine import calculate_confidence
+from option_engine.greeks_engine import calculate_atm_greeks
 
 router = APIRouter(tags=["Option Engine"])
 fyers_client = FyersClient()
@@ -282,6 +283,7 @@ def get_option_chain(
         call_writing=writing_data["call_writing"],
         put_writing=writing_data["put_writing"]
     )
+    atm_greeks = calculate_atm_greeks(options_list, atm_strike)
 
     return {
         "symbol":                symbol.upper(),
@@ -300,6 +302,7 @@ def get_option_chain(
         "put_writing_strike":    float(writing_data["put_writing_strike"]),
         "market_bias":           conf_data["market_bias"],
         "confidence_score":      float(conf_data["confidence_score"]),
+        "atm_greeks":            atm_greeks,
         "chain":                 chain,
     }
 
