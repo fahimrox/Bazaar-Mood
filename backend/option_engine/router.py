@@ -2,6 +2,7 @@ import math
 from datetime import datetime, date
 from fastapi import APIRouter, HTTPException, Query
 from option_engine.fyers_client import FyersClient
+from option_engine.strike_utils import get_atm_strike
 
 router = APIRouter(tags=["Option Engine"])
 fyers_client = FyersClient()
@@ -254,20 +255,24 @@ def get_option_chain(
     # ── Step 5: sort + mark ATM ───────────────────────────────────────────
     chain = sorted(strike_map.values(), key=lambda x: x["strike"])
 
+    atm_strike = 0.0
     if chain and spot > 0:
-        atm = min(chain, key=lambda x: abs(x["strike"] - spot))
-        atm["is_atm"] = True
+        strikes = [r["strike"] for r in chain]
+        atm_strike = get_atm_strike(spot, strikes)
+        for row in chain:
+            row["is_atm"] = (row["strike"] == atm_strike)
 
     pcr       = _calculate_pcr(chain)
     max_pain  = _calculate_max_pain(chain)
 
     return {
-        "symbol":   symbol.upper(),
-        "spot":     float(spot),
-        "expiry":   expiry_date_display,
-        "pcr":      float(pcr),
-        "maxPain":  float(max_pain),
-        "chain":    chain,
+        "symbol":     symbol.upper(),
+        "spot":       float(spot),
+        "expiry":     expiry_date_display,
+        "pcr":        float(pcr),
+        "maxPain":    float(max_pain),
+        "atm_strike": float(atm_strike),
+        "chain":      chain,
     }
 
 
