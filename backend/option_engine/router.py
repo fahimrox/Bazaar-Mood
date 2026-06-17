@@ -5,6 +5,7 @@ from option_engine.fyers_client import FyersClient
 from option_engine.strike_utils import get_atm_strike
 from option_engine.support_resistance import calculate_support_resistance
 from option_engine.writing_analysis import analyze_writing
+from option_engine.confidence_engine import calculate_confidence
 
 router = APIRouter(tags=["Option Engine"])
 fyers_client = FyersClient()
@@ -269,6 +270,18 @@ def get_option_chain(
 
     sr_data = calculate_support_resistance(chain, atm_strike)
     writing_data = analyze_writing(chain, atm_strike)
+    conf_data = calculate_confidence(
+        spot_price=float(spot),
+        pcr=float(pcr),
+        max_pain=float(max_pain),
+        atm_strike=float(atm_strike),
+        support_1=float(sr_data["support_1"]),
+        support_confidence=float(sr_data["support_confidence"]),
+        resistance_1=float(sr_data["resistance_1"]),
+        resistance_confidence=float(sr_data["resistance_confidence"]),
+        call_writing=writing_data["call_writing"],
+        put_writing=writing_data["put_writing"]
+    )
 
     return {
         "symbol":                symbol.upper(),
@@ -285,6 +298,8 @@ def get_option_chain(
         "call_writing_strike":   float(writing_data["call_writing_strike"]),
         "put_writing":           writing_data["put_writing"],
         "put_writing_strike":    float(writing_data["put_writing_strike"]),
+        "market_bias":           conf_data["market_bias"],
+        "confidence_score":      float(conf_data["confidence_score"]),
         "chain":                 chain,
     }
 
