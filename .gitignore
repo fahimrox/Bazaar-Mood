@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment / secrets — NEVER commit
+.env
+*.env
+!.env.example
+
+# Fyers SDK logs
+backend/fyersApi.log
+backend/fyersRequests.log
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node / frontend build artifacts
+node_modules/
+frontend/dist/
+frontend/build/
+.next/
+
+# Misc
+*.tmp
+*.bak

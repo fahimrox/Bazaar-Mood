@@ -1,6 +1,11 @@
+import os
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+# Load environment variables from backend/.env
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 # Import routers from the modular engines
 from data_engine.router import router as data_router
@@ -18,7 +23,11 @@ app = FastAPI(
 # Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:5180"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5180"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
